@@ -6,6 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	limiter "github.com/ulule/limiter/v3"
+	limiter_gin "github.com/ulule/limiter/v3/drivers/middleware/gin"
+	limiter_store "github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
 func main() {
@@ -22,11 +26,18 @@ func main() {
 		panic(err.Error())
 	}
 
+	// Add middleware
+	rate, _ := limiter.NewRateFromFormatted("60-S")
+	store := limiter_store.NewStoreWithOptions(limiter.StoreOptions{Prefix: "limiter_gin", MaxRetry: 3})
+	middleware := limiter_gin.NewMiddleware(limiter.New(store, rate))
+
 	// Routers
-	r := gin.Default()
+	router := gin.Default()
+	router.ForwardedByClientIP = true
+	router.Use(middleware)
 
-	r.POST("/shorten", ShortenURL)
-	r.GET("/*susURI", ResolveURL)
+	router.POST("/shorten", ShortenURL)
+	router.GET("/*susURI", ResolveURL)
 
-	r.Run()
+	router.Run()
 }
