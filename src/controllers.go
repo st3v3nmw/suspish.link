@@ -41,6 +41,10 @@ var FILE_FORMATS_AND_FRIENDS = []string{
 	".x86_64", ".mips",
 }
 
+var TARGETS = []string{
+	"target_id", "prey_id", "bait_id", "tracker_id",
+}
+
 func ShortenURL(c *gin.Context) {
 	var RequestBody struct {
 		LongURL string `json:"long_url"`
@@ -69,7 +73,7 @@ func ShortenURL(c *gin.Context) {
 
 	// Shorten URL
 	var susURIBuilder strings.Builder
-	nWords := 8
+	nWords := 6
 	for i := 0; i < nWords; i++ {
 		if i%2 == 0 {
 			susURIBuilder.WriteString(VERBS[rand.Int()%len(VERBS)])
@@ -91,9 +95,12 @@ func ShortenURL(c *gin.Context) {
 	}
 
 	susURI := susURIBuilder.String()
-	susURL := fmt.Sprintf("%s://%s/%s", scheme, c.Request.Host, url.QueryEscape(susURI))
+	target := fmt.Sprintf("&%s=%s", TARGETS[rand.Int()%len(TARGETS)], GenerateRandomString(8))
+	escapedSusURI := url.QueryEscape(susURI) + target
 
-	link = Link{LongURL: longURL, SusURI: susURI}
+	susURL := fmt.Sprintf("%s://%s/%s", scheme, c.Request.Host, escapedSusURI)
+
+	link = Link{LongURL: longURL, SusURI: susURI + target}
 	CreateLink(&link)
 
 	c.JSON(http.StatusOK, gin.H{"sus_url": susURL})
@@ -102,14 +109,15 @@ func ShortenURL(c *gin.Context) {
 func ResolveURL(c *gin.Context) {
 	susURI := c.Param("susURI")[1:]
 
-	fmt.Println(susURI)
-
 	// Check if the URI exists
 	var link Link
 	if err := FindLinkBySusURI(&link, susURI); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "sus_url does not exist"})
 		return
 	}
+
+	link.Clicks += 1
+	UpdateLink(&link)
 
 	// Redirect
 	c.Redirect(http.StatusPermanentRedirect, link.LongURL)
