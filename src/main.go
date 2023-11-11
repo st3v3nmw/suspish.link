@@ -34,6 +34,7 @@ func main() {
 	// Routers
 	router := gin.Default()
 	router.ForwardedByClientIP = true
+	router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 	router.Use(middleware)
 
 	router.POST("/shorten", ShortenURL)
