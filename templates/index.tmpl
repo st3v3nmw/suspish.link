@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Suspish Links</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👀</text></svg>">
+</head>
+
+<body>
+    <div class="flex h-screen">
+        <div class="m-auto w-5/6 md:w-3/4 lg:w-1/2">
+            <h2 class="text-4xl font-extrabold">Suspish Links</h2>
+            <p class="my-4 text-lg text-gray-600">
+                Why shorten URLs when you can make them longer and suspicious? 👀
+            </p>
+
+            <p class="text-gray-500">
+                E.g.
+                <a href="https://github.com/st3v3nmw" class="font-medium text-blue-600 hover:underline">
+                    https://github.com/st3v3nmw
+                </a>
+                becomes
+                <a href="http://localhost:8080/r/poison-psyop.root.crypto-panic~net.pkg&prey_id=FCKeFyO6"
+                    class="font-medium text-blue-600 hover:underline">
+                    http://localhost:8080/r/poison-psyop.root.crypto-panic~net.pkg&prey_id=FCKeFyO6
+                </a>
+            </p>
+
+            <div id="error-alert"
+                class="flex items-center p-4 mt-6 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50"
+                style="display: none;" role="alert">
+                <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                </svg>
+                <span class="sr-only">Info</span>
+                <span id="error-message">Aw, Snap! An error occurred.</span>
+            </div>
+
+            <form onsubmit="return shortenURL()">
+                <input id="long-url" type="url"
+                    class="mb-4 mt-6 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="Try https://www.google.com" required>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    "Shorten"
+                </button>
+            </form>
+
+            <div id="suspish-block" class="mt-8" style="display: none;">
+                <p id="suspish-link-el"></p>
+                <button id="copy-to-clipboard"
+                    class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Copy to clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" language="javascript">
+    var susURL = null;
+    const copyEl = document.getElementById("copy-to-clipboard")
+    copyEl.onclick = async () => {
+        await navigator.clipboard.writeText(susURL);
+        copyEl.innerText = "Copied!";
+        setTimeout(() => {
+            copyEl.innerText = "Copy to clipboard";
+        }, 2000);
+    };
+
+    function shortenURL() {
+        fetch(
+            "/shorten",
+            {
+                headers: { "Content-Type": "application/json" },
+                method: "POST",
+                body: JSON.stringify(
+                    {
+                        "long_url": document.getElementById("long-url").value
+                    }
+                )
+            }
+        )
+            .then(async (response) => {
+                const errAlert = document.getElementById("error-alert");
+                const linkBlock = document.getElementById("suspish-block");
+                const linkEl = document.getElementById("suspish-link-el");
+
+                if (response.ok) {
+                    const json = await response.json();
+                    susURL = json['sus_url'];
+                    linkEl.innerHTML = `
+                        Your suspish link is
+                        <a href="${susURL}" class="font-medium text-blue-600 hover:underline" target="_blank" id="suspish-link">
+                            ${susURL}
+                        </a>
+                        👀!
+                    `;
+                    errAlert.style = "display: none;";
+                    linkBlock.style = "display: block;";
+                } else {
+                    const errMessageEl = document.getElementById("error-message");
+                    if (response.status == 400) {
+                        const json = await response.json();
+                        errMessageEl.innerText = json["error"];
+                    } else {
+                        errMessageEl.innerText = response.statusText;
+                    }
+                    errAlert.style = "display: block;";
+                    linkBlock.style = "display: none;";
+                }
+            });
+        return false;
+    }
+</script>
+
+</html>

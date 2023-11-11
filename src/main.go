@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -37,8 +38,17 @@ func main() {
 	router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 	router.Use(middleware)
 
-	router.POST("/shorten", ShortenURL)
-	router.GET("/*susURI", ResolveURL)
+	// Load HTML templates
+	router.LoadHTMLGlob("templates/*")
 
-	router.Run()
+	// URLs
+	router.POST("/shorten", ShortenURL)
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(
+			http.StatusOK, "index.tmpl", gin.H{},
+		)
+	})
+	router.GET("/r/*susURI", ResolveURL)
+
+	router.Run(":8080")
 }
