@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -64,9 +65,11 @@ func ShortenURL(c *gin.Context) {
 	// Check if the URL is already shortened
 	var link Link
 	scheme := GetHttpScheme(c)
+	hosts := strings.Split(os.Getenv("HOSTS"), ",")
+	host := hosts[rand.Int()%len(hosts)]
 
 	if err := FindLinkByLongURL(&link, longURL); err == nil {
-		susURL := fmt.Sprintf("%s://%s/%s", scheme, c.Request.Host, url.QueryEscape(link.SusURI))
+		susURL := fmt.Sprintf("%s://%s/%s", scheme, host, url.QueryEscape(link.SusURI))
 		c.JSON(http.StatusOK, gin.H{"sus_url": susURL})
 		return
 	}
@@ -98,7 +101,7 @@ func ShortenURL(c *gin.Context) {
 	target := fmt.Sprintf("&%s=%s", TARGETS[rand.Int()%len(TARGETS)], GenerateRandomString(8))
 	escapedSusURI := url.QueryEscape(susURI) + target
 
-	susURL := fmt.Sprintf("%s://%s/%s", scheme, c.Request.Host, escapedSusURI)
+	susURL := fmt.Sprintf("%s://%s/%s", scheme, host, escapedSusURI)
 
 	link = Link{LongURL: longURL, SusURI: susURI + target}
 	CreateLink(&link)
