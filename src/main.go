@@ -45,7 +45,7 @@ func main() {
 	router.POST("/shorten", ShortenURL)
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(
-			http.StatusOK, "index.tmpl", gin.H{},
+			http.StatusOK, "index.html", gin.H{},
 		)
 	})
 	router.GET("/r/*susURI", ResolveURL)
