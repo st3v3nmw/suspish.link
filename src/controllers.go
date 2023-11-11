@@ -68,7 +68,7 @@ func ShortenURL(c *gin.Context) {
 	hosts := strings.Split(os.Getenv("HOSTS"), ",")
 	host := hosts[rand.Int()%len(hosts)]
 
-	if err := FindLinkByLongURL(&link, longURL); err == nil {
+	if err := CachedLink(FindLinkByLongURL)(&link, longURL); err == nil {
 		susURL := fmt.Sprintf("%s://%s/r/%s", scheme, host, url.QueryEscape(link.SusURI))
 		c.JSON(http.StatusOK, gin.H{"sus_url": susURL})
 		return
@@ -114,13 +114,10 @@ func ResolveURL(c *gin.Context) {
 
 	// Check if the URI exists
 	var link Link
-	if err := FindLinkBySusURI(&link, susURI); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "sus_url does not exist"})
+	if err := CachedLink(FindLinkBySusURI)(&link, susURI); err != nil {
+		c.String(http.StatusNotFound, "404: Suspish link not found")
 		return
 	}
-
-	link.Clicks += 1
-	UpdateLink(&link)
 
 	// Redirect
 	c.Redirect(http.StatusPermanentRedirect, link.LongURL)
