@@ -46,8 +46,6 @@ var TARGETS = []string{
 }
 
 func ShortenURL(c *gin.Context) {
-	fmt.Println(c.Request.Header.Get("X-Forwarded-For"))
-
 	var RequestBody struct {
 		LongURL string `json:"long_url"`
 	}

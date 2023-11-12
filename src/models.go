@@ -28,6 +28,8 @@ type Link struct {
 	LongURL   string    `gorm:"not null;unique;index"`
 	SusURI    string    `gorm:"not null;unique;index"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt
 }
 
 func CreateLink(link *Link) (err error) {
