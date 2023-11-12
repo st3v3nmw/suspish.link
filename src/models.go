@@ -43,7 +43,8 @@ func CachedLink(f FindLinkByURI) FindLinkByURI {
 		raw_link := new(RawLink)
 		// check if URI is in the cache
 		ctx := context.TODO()
-		if err = Cache.Get(ctx, URI, raw_link); err == nil {
+		key := "suspish:" + URI
+		if err = Cache.Get(ctx, key, raw_link); err == nil {
 			link.ID = raw_link.ID
 			link.LongURL = raw_link.LongURL
 			link.SusURI = raw_link.SusURI
@@ -63,7 +64,7 @@ func CachedLink(f FindLinkByURI) FindLinkByURI {
 		raw_link.CreatedAt = link.CreatedAt
 		err = Cache.Set(&cache.Item{
 			Ctx:   ctx,
-			Key:   URI,
+			Key:   key,
 			Value: raw_link,
 			TTL:   256 * time.Minute,
 		})
