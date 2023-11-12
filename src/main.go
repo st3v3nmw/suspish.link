@@ -42,9 +42,13 @@ func main() {
 	})
 
 	// Add middleware
-	rate, _ := limiter.NewRateFromFormatted("60-S")
-	store := limiter_store.NewStoreWithOptions(limiter.StoreOptions{Prefix: "limiter_gin", MaxRetry: 3})
-	middleware := limiter_gin.NewMiddleware(limiter.New(store, rate))
+	rate, _ := limiter.NewRateFromFormatted("5-S")
+	store := limiter_store.NewStoreWithOptions(
+		limiter.StoreOptions{Prefix: "limiter_gin", MaxRetry: 3},
+	)
+	middleware := limiter_gin.NewMiddleware(
+		limiter.New(store, rate, limiter.WithClientIPHeader("X-Forwarded-For")),
+	)
 
 	// Routers
 	router := gin.Default()
@@ -62,7 +66,7 @@ func main() {
 			http.StatusOK, "index.html", gin.H{},
 		)
 	})
-	router.GET("/r/*susURI", ResolveURL)
+	router.GET("/q/*susURI", ResolveURL)
 
 	router.Run(":8080")
 }
