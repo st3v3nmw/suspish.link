@@ -3,8 +3,11 @@ package main
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/cache/v9"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -14,9 +17,10 @@ import (
 )
 
 func main() {
-	// Open the database connection
-	db_dsn := os.Getenv("DB_DSN")
 	var err error
+
+	// Set up database
+	db_dsn := os.Getenv("DB_DSN")
 	DB, err = gorm.Open(postgres.Open(db_dsn), &gorm.Config{})
 	if err != nil {
 		panic(err.Error())
@@ -26,6 +30,16 @@ func main() {
 	if err := DB.AutoMigrate(&Link{}); err != nil {
 		panic(err.Error())
 	}
+
+	// Set up the cache
+	redis_host := os.Getenv("REDIS_HOST")
+	rdb := redis.NewClient(&redis.Options{
+		Addr: redis_host + ":6379",
+	})
+	Cache = cache.New(&cache.Options{
+		Redis:      rdb,
+		LocalCache: cache.NewTinyLFU(2048, 32*time.Minute),
+	})
 
 	// Add middleware
 	rate, _ := limiter.NewRateFromFormatted("60-S")
