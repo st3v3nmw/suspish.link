@@ -54,7 +54,7 @@ func CachedLink(f FindLinkByURI) FindLinkByURI {
 			return nil
 		}
 
-		// call decorated functin
+		// call decorated function
 		if err = f(link, URI); err != nil {
 			return err
 		}
